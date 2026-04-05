@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Runner - Source vs Machine Code</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #0d1117;
+      --surf1:  #161b22;
+      --surf2:  #21262d;
+      --border: #30363d;
+      --text:   #e6edf3;
+      --muted:  #8b949e;
+      --blue:   #58a6ff;
+      --green:  #3fb950;
+      --yellow: #e3b341;
+      --red:    #f85149;
+      --purple: #bc8cff;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Utils ── */
+    .hidden { display: none !important; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      padding: .55rem 1.25rem;
+      border: 1px solid transparent; border-radius: 6px;
+      font-size: .9rem; font-weight: 600;
+      cursor: pointer;
+      transition: filter .15s, transform .1s;
+      user-select: none;
+    }
+    .btn:hover  { filter: brightness(1.2); transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; filter: none; }
+    .btn-primary   { background: var(--blue);  color: #0d1117; }
+    .btn-secondary { background: var(--surf2); color: var(--text); border-color: var(--border); }
+    .btn-success   { background: var(--green); color: #0d1117; }
+
+    /* ── Phases ── */
+    .phase { display: none; min-height: 100vh; }
+
+    /* ══════════════════════════════════════
+       PHASE 1 — INTRO
+    ══════════════════════════════════════ */
+    #p-intro.active {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem 1.5rem; gap: 1.5rem;
+    }
+
+    .logo-title {
+      font-size: 3rem; font-weight: 800; letter-spacing: -.02em; text-align: center;
+      background: linear-gradient(120deg, var(--blue) 0%, var(--purple) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .logo-sub { color: var(--muted); font-size: .95rem; margin-top: .3rem; text-align: center; }
+
+    .card {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.5rem 1.75rem;
+      width: 100%; max-width: 680px;
+    }
+    .card-label {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: var(--muted); margin-bottom: .85rem;
+    }
+    .card p { color: var(--muted); line-height: 1.75; font-size: .9rem; }
+
+    .cmd-table {
+      width: 100%; border-collapse: collapse;
+      font-family: 'Courier New', monospace; font-size: .88rem;
+    }
+    .cmd-table th {
+      text-align: left; padding: .4rem .8rem;
+      color: var(--muted); font-weight: 500; font-size: .75rem;
+      text-transform: uppercase; letter-spacing: .08em;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .cmd-table td { padding: .45rem .8rem; border-bottom: 1px solid var(--surf2); }
+    .cmd-table tr:last-child td { border-bottom: none; }
+    .t-cmd  { color: var(--yellow); }
+    .t-bin  { color: var(--purple); letter-spacing: .15em; font-weight: 700; }
+    .t-desc { color: var(--muted); font-family: 'Segoe UI', sans-serif; font-size: .82rem; }
+
+    /* ══════════════════════════════════════
+       PHASE 2 — GAME
+    ══════════════════════════════════════ */
+    #p-game.active {
+      display: flex; flex-direction: column;
+      padding: 1rem; gap: .75rem;
+    }
+
+    .topbar {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 8px; padding: .6rem 1rem;
+    }
+    .pips { display: flex; gap: .4rem; }
+    .pip {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem; font-weight: 700;
+      background: var(--surf2); border: 2px solid var(--border); color: var(--muted);
+    }
+    .pip.done   { background: var(--green); border-color: var(--green); color: #000; }
+    .pip.active { background: var(--blue);  border-color: var(--blue);  color: #000; }
+
+    .level-info h2 { font-size: 1rem; font-weight: 700; }
+    .level-info p  { font-size: .8rem; color: var(--muted); margin-top: .1rem; }
+
+    .game-layout {
+      display: grid; grid-template-columns: auto 1fr;
+      gap: 1rem; flex: 1;
+    }
+
+    /* ── Grid side ── */
+    .grid-side { display: flex; flex-direction: column; gap: .6rem; }
+
+    .grid-wrap {
+      display: grid;
+      grid-template-columns: 20px repeat(6, 62px);
+      grid-template-rows:    20px repeat(6, 62px);
+      gap: 2px;
+    }
+
+    .axis-lbl {
+      display: flex; align-items: center; justify-content: center;
+      font-size: .6rem; color: rgba(139,148,158,.35); font-family: monospace;
+    }
+
+    .cell {
+      width: 62px; height: 62px; border-radius: 4px;
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .12s;
+    }
+    .cell-floor  { background: var(--surf2); }
+    .cell-wall   {
+      background: #3a4050;
+      border: 2px solid #5c6474;
+      box-shadow: inset 2px 2px 0 rgba(255,255,255,.05), inset -2px -2px 0 rgba(0,0,0,.3);
+    }
+    .cell-wall::after {
+      content: '#';
+      font-family: monospace; font-size: .8rem; font-weight: 700;
+      color: rgba(92,100,116,.6);
+      position: absolute;
+    }
+    .cell-trail  { background: rgba(88,166,255,.07); }
+    .cell-player { background: rgba(88,166,255,.14); }
+    .cell-goal   { background: rgba(63,185,80,.09); }
+
+    .cell-player::after {
+      content: '';
+      position: absolute;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 14px var(--blue), 0 0 5px rgba(88,166,255,.6);
+    }
+
+    .goal-ring {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 3px solid var(--green);
+      box-shadow: 0 0 10px rgba(63,185,80,.5);
+      animation: pulse-goal 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-goal {
+      0%,100% { transform: scale(1);    opacity: 1; }
+      50%      { transform: scale(1.12); opacity: .7; }
+    }
+
+    .cell-player.cell-goal::after {
+      background: var(--green);
+      box-shadow: 0 0 14px var(--green), 0 0 5px rgba(63,185,80,.6);
+    }
+    .cell-reached { animation: reach-pop .5s; }
+    @keyframes reach-pop {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    .cell-error { animation: err-shake .35s; }
+    @keyframes err-shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-5px); }
+      40%,80% { transform: translateX(5px); }
+    }
+    .cell-error::before {
+      content: ''; position: absolute; inset: 0;
+      background: rgba(248,81,73,.3); border-radius: 4px;
+    }
+
+    .cur-cmd {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 6px; padding: .38rem .85rem;
+      font-family: 'Courier New', monospace; font-size: .83rem;
+      color: var(--yellow); min-height: 2rem; display: flex; align-items: center;
+    }
+
+    .status-bar {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 6px; padding: .45rem .85rem;
+      font-size: .82rem; display: flex; align-items: center; gap: .5rem;
+      min-height: 2.2rem;
+    }
+    .s-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .s-idle .s-dot { background: var(--muted); }
+    .s-run  .s-dot { background: var(--yellow); animation: blink .7s infinite; }
+    .s-ok   .s-dot { background: var(--green); }
+    .s-err  .s-dot { background: var(--red); }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:.2; } }
+
+    /* ── Editor side ── */
+    .editor-side { display: flex; flex-direction: column; gap: .6rem; }
+
+    .editor-chrome {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .chrome-bar {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .5rem .85rem; border-bottom: 1px solid var(--border);
+      background: var(--surf2);
+    }
+    .traffic { width: 11px; height: 11px; border-radius: 50%; }
+    .t-r { background: #ff5f57; } .t-y { background: #ffbd2e; } .t-g { background: #28c940; }
+    .chrome-name { font-family: monospace; font-size: .82rem; color: var(--muted); margin-left: .3rem; }
+
+    .editor-body { display: flex; }
+    .line-nums {
+      background: var(--surf2); border-right: 1px solid var(--border);
+      padding: .7rem .5rem .7rem .4rem;
+      color: var(--muted); font-family: 'Courier New', monospace;
+      font-size: .88rem; line-height: 1.63; text-align: right;
+      min-width: 2.6rem; user-select: none; white-space: pre;
+    }
+    .code-ta {
+      flex: 1; background: var(--surf1);
+      color: var(--text); border: none; outline: none;
+      padding: .7rem 1rem;
+      font-family: 'Courier New', monospace; font-size: .88rem; line-height: 1.63;
+      resize: none; min-height: 240px; tab-size: 2;
+    }
+    .code-ta::placeholder { color: rgba(139,148,158,.35); }
+
+    .toolbar { display: flex; align-items: center; gap: .5rem; }
+    .step-info { margin-left: auto; font-size: .82rem; color: var(--muted); font-family: monospace; }
+
+    .quick-insert {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 8px; padding: .7rem 1rem;
+    }
+    .qi-label {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--muted); margin-bottom: .5rem;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .chip {
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 4px; padding: .18rem .55rem;
+      font-family: 'Courier New', monospace; font-size: .78rem;
+      color: var(--yellow); cursor: pointer;
+      transition: background .12s, border-color .12s;
+    }
+    .chip:hover { background: rgba(227,179,65,.12); border-color: var(--yellow); }
+
+    /* ══════════════════════════════════════
+       PHASE 3 — BINARY TRANSLATION
+    ══════════════════════════════════════ */
+    #p-binary.active {
+      display: flex; flex-direction: column;
+      padding: 1rem; gap: .75rem;
+    }
+
+    .bin-topbar {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 8px; padding: .75rem 1.25rem;
+    }
+    .bin-topbar h2 { font-size: 1rem; font-weight: 700; color: var(--purple); }
+    .bin-topbar p  { font-size: .82rem; color: var(--muted); margin-top: .2rem; line-height: 1.5; }
+
+    .bin-layout {
+      display: grid; grid-template-columns: auto 1fr;
+      gap: 1rem; flex: 1;
+    }
+
+    /* reuse .grid-side, .grid-wrap, .cell-*, .cur-cmd, .status-bar from game phase */
+
+    .bin-editor-side { display: flex; flex-direction: column; gap: .6rem; }
+
+    .bin-refs {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: .6rem;
+    }
+
+    .ref-tbl { width: 100%; border-collapse: collapse; font-family: monospace; font-size: .85rem; }
+    .ref-tbl td { padding: .38rem .55rem; border-bottom: 1px solid var(--border); }
+    .ref-tbl tr:last-child td { border-bottom: none; }
+    .r-cmd { color: var(--yellow); }
+    .r-arr { color: var(--muted); }
+    .r-bin { color: var(--purple); font-weight: 700; letter-spacing: .2em; }
+
+    .src-display {
+      font-family: 'Courier New', monospace; font-size: .85rem;
+      color: var(--yellow); line-height: 1.65;
+      max-height: 160px; overflow-y: auto;
+      padding: .1rem 0;
+    }
+    .src-display .sd-num { color: var(--muted); margin-right: .6rem; font-size: .72rem; user-select: none; }
+
+    .bin-ta-wrap {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden; display: flex; flex-direction: column;
+    }
+    .bin-chrome-bar {
+      display: flex; align-items: center; gap: .45rem;
+      padding: .5rem .85rem; border-bottom: 1px solid var(--border);
+      background: var(--surf2);
+    }
+
+    .explainer {
+      padding: .6rem .75rem;
+      background: var(--surf2); border-radius: 6px;
+      font-size: .78rem; color: var(--muted); line-height: 1.55;
+    }
+    .explainer strong { color: var(--text); }
+
+    /* ══════════════════════════════════════
+       PHASE 4 — WIN
+    ══════════════════════════════════════ */
+    #p-win.active {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem 1.5rem; gap: 1.5rem; text-align: center;
+    }
+
+    .win-icon { font-size: 3.5rem; animation: float 2.5s ease-in-out infinite; }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+    .win-title {
+      font-size: 2.3rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .win-sub { color: var(--muted); font-size: .9rem; }
+
+    .stat-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; width: 100%; max-width: 540px;
+    }
+    .stat {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.1rem;
+    }
+    .stat-n { font-size: 2rem; font-weight: 800; color: var(--blue); }
+    .stat-l { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+
+    .lesson {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.4rem 1.75rem;
+      max-width: 600px; text-align: left;
+    }
+    .lesson h3 { color: var(--blue); margin-bottom: .6rem; }
+    .lesson p  { color: var(--muted); line-height: 1.75; font-size: .88rem; }
+    .lesson code      { font-family: monospace; color: var(--yellow); }
+    .lesson code.bin  { color: var(--purple); }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .cell        { width: 50px; height: 50px; }
+      .grid-wrap   { grid-template-columns: 18px repeat(6, 50px); grid-template-rows: 18px repeat(6, 50px); }
+      .bin-grid    { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     PHASE 1 — INTRO
+══════════════════════════════════════ -->
+<div id="p-intro" class="phase active">
+  <div>
+    <div class="logo-title">&lt;Code Runner /&gt;</div>
+    <div class="logo-sub">Navigate using source code. Then translate it to machine code.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">How to Play</div>
+    <p>
+      Type <strong style="color:var(--text)">commands</strong> into the editor to move the
+      player <span style="color:var(--blue)">●</span> to the goal
+      <span style="color:var(--green)">◎</span> on the 6x6 grid.<br><br>
+      <strong style="color:var(--text)">Rules:</strong> One command per line. Hitting a wall
+      or stepping off the grid will stop your program - press Reset and try again. Finish all
+      <strong style="color:var(--text)">4 levels</strong>, then translate your Level 3 commands
+      into binary, just like a compiler does. You can also repeat a command using
+      <strong style="color:var(--text)">COMMAND(N)</strong> (e.g. MOVE_RIGHT(3)).
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Command Reference</div>
+    <table class="cmd-table">
+      <thead>
+        <tr>
+          <th>Command</th>
+          <th>Binary Code</th>
+          <th>What it does</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="t-cmd">MOVE_UP</td>   <td class="t-bin">000</td><td class="t-desc">Move one step up</td></tr>
+        <tr><td class="t-cmd">MOVE_DOWN</td> <td class="t-bin">001</td><td class="t-desc">Move one step down</td></tr>
+        <tr><td class="t-cmd">MOVE_LEFT</td> <td class="t-bin">010</td><td class="t-desc">Move one step left</td></tr>
+        <tr><td class="t-cmd">MOVE_RIGHT</td><td class="t-bin">011</td><td class="t-desc">Move one step right</td></tr>
+        <tr><td class="t-cmd">WAIT</td>      <td class="t-bin">100</td><td class="t-desc">Stay in place for one step</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button class="btn btn-primary" onclick="Game.start()" style="font-size:1rem;padding:.75rem 2.4rem;">
+    ▶ Start
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PHASE 2 — GAME
+══════════════════════════════════════ -->
+<div id="p-game" class="phase">
+  <div class="topbar">
+    <div class="pips" id="pips"></div>
+    <div class="level-info">
+      <h2 id="levelName"></h2>
+      <p  id="levelDesc"></p>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <!-- Grid -->
+    <div class="grid-side">
+      <div class="grid-wrap" id="gridWrap"></div>
+      <div class="cur-cmd" id="curCmd">-</div>
+      <div class="status-bar s-idle" id="statusBar">
+        <div class="s-dot"></div>
+        <span id="statusTxt">Ready. Write your program and press Run.</span>
+      </div>
+    </div>
+
+    <!-- Editor -->
+    <div class="editor-side">
+      <div class="editor-chrome">
+        <div class="chrome-bar">
+          <span class="traffic t-r"></span>
+          <span class="traffic t-y"></span>
+          <span class="traffic t-g"></span>
+          <span class="chrome-name">program.src</span>
+        </div>
+        <div class="editor-body">
+          <div class="line-nums" id="lineNums">1</div>
+          <textarea class="code-ta" id="codeTA"
+            placeholder="// One command per line&#10;// Use COMMAND(N) to repeat, e.g. MOVE_RIGHT(3)&#10;&#10;MOVE_RIGHT&#10;MOVE_DOWN"
+            spellcheck="false"
+            oninput="Game.updateLineNums()"></textarea>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary"   id="runBtn"   onclick="Game.run()">▶ Run</button>
+        <button class="btn btn-secondary" id="resetBtn" onclick="Game.reset()">↺ Reset</button>
+        <span class="step-info" id="stepInfo"></span>
+      </div>
+
+      <div class="quick-insert">
+        <div class="qi-label">Quick Insert - click to add a command</div>
+        <div class="chips">
+          <span class="chip" onclick="Game.insert('MOVE_UP')">MOVE_UP</span>
+          <span class="chip" onclick="Game.insert('MOVE_DOWN')">MOVE_DOWN</span>
+          <span class="chip" onclick="Game.insert('MOVE_LEFT')">MOVE_LEFT</span>
+          <span class="chip" onclick="Game.insert('MOVE_RIGHT')">MOVE_RIGHT</span>
+          <span class="chip" onclick="Game.insert('WAIT')">WAIT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PHASE 3 — BINARY TRANSLATION
+══════════════════════════════════════ -->
+<div id="p-binary" class="phase">
+  <div class="bin-topbar">
+    <h2>Translate to Binary</h2>
+    <p>
+      You finished Level 3. Now rewrite that same program using binary codes instead of commands.
+      Use the key on the right as a reference. Press Run to see if your binary code reaches the goal.
+    </p>
+  </div>
+
+  <div class="bin-layout">
+    <!-- Left: Level 3 grid plays back here -->
+    <div class="grid-side">
+      <div class="grid-wrap" id="binGridWrap"></div>
+      <div class="cur-cmd" id="binCurCmd">-</div>
+      <div class="status-bar s-idle" id="binStatusBar">
+        <div class="s-dot"></div>
+        <span id="binStatusTxt">Write your binary code on the right and press Run.</span>
+      </div>
+    </div>
+
+    <!-- Right: references + binary editor -->
+    <div class="bin-editor-side">
+      <div class="bin-refs">
+        <!-- Source code reference -->
+        <div class="card" style="padding:1rem 1.1rem;">
+          <div class="card-label">Your Level 3 Source Code</div>
+          <div class="src-display" id="srcDisplay"></div>
+        </div>
+        <!-- Binary key -->
+        <div class="card" style="padding:1rem 1.1rem;">
+          <div class="card-label">Binary Key</div>
+          <table class="ref-tbl">
+            <tr><td class="r-cmd">MOVE_UP</td>   <td class="r-arr">→</td><td class="r-bin">000</td></tr>
+            <tr><td class="r-cmd">MOVE_DOWN</td> <td class="r-arr">→</td><td class="r-bin">001</td></tr>
+            <tr><td class="r-cmd">MOVE_LEFT</td> <td class="r-arr">→</td><td class="r-bin">010</td></tr>
+            <tr><td class="r-cmd">MOVE_RIGHT</td><td class="r-arr">→</td><td class="r-bin">011</td></tr>
+            <tr><td class="r-cmd">WAIT</td>      <td class="r-arr">→</td><td class="r-bin">100</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Binary code editor -->
+      <div class="bin-ta-wrap">
+        <div class="bin-chrome-bar">
+          <span class="traffic t-r"></span>
+          <span class="traffic t-y"></span>
+          <span class="traffic t-g"></span>
+          <span class="chrome-name">program.bin</span>
+        </div>
+        <div class="editor-body">
+          <div class="line-nums" id="binLineNums">1</div>
+          <textarea class="code-ta" id="binTA"
+            placeholder="// One 3-bit code per line&#10;// Example:&#10;011&#10;011&#10;001"
+            spellcheck="false"
+            oninput="Binary.updateLineNums()"></textarea>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary"   id="binRunBtn"   onclick="Binary.run()">▶ Run Binary</button>
+        <button class="btn btn-secondary" id="binResetBtn" onclick="Binary.reset()">↺ Reset</button>
+        <span class="step-info" id="binStepInfo"></span>
+      </div>
+
+      <div class="explainer">
+        <strong>How it works:</strong> Each 3-bit code you write maps to one command (e.g. 011 = MOVE_RIGHT).
+        The CPU reads binary directly - it has no idea what "MOVE_RIGHT" means as text.
+        If your binary is correct, the player will reach the same goal as before.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PHASE 4 — WIN
+══════════════════════════════════════ -->
+<div id="p-win" class="phase">
+  <div class="win-icon">🏁</div>
+  <div class="win-title">All Done!</div>
+  <div class="win-sub">All 4 levels cleared and binary translation correct.</div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-n" id="ws-cmds">0</div><div class="stat-l">Total Commands</div></div>
+    <div class="stat"><div class="stat-n" id="ws-bits">0</div><div class="stat-l">Bits Generated</div></div>
+    <div class="stat"><div class="stat-n">4</div>              <div class="stat-l">Maps Cleared</div></div>
+  </div>
+
+  <div class="lesson">
+    <h3>From Source Code to Machine Code</h3>
+    <p>
+      Every command you typed - <code>MOVE_RIGHT</code>, <code>MOVE_UP</code> - is
+      <strong>source code</strong>: text that people can read and write.
+      Before a CPU can run it, a <strong>compiler</strong> translates each command into a
+      binary code made of 1s and 0s. For example, <code>MOVE_RIGHT</code> becomes
+      <code class="bin">011</code>. The CPU reads those bits and uses them to control its
+      internal circuits. That whole process -
+      <strong>source code to binary to electrical signals</strong> - is how every program
+      on every computer runs.
+    </p>
+  </div>
+
+  <button class="btn btn-secondary" onclick="Game.restart()" style="margin-top:.25rem;">
+    ↺ Play Again
+  </button>
+</div>
+
+
+<script>
+'use strict';
+
+/* ════════════════════════════════════════
+   CONSTANTS
+════════════════════════════════════════ */
+const ISA = {
+  MOVE_UP:    '000',
+  MOVE_DOWN:  '001',
+  MOVE_LEFT:  '010',
+  MOVE_RIGHT: '011',
+  WAIT:       '100'
+};
+const VALID = new Set(Object.keys(ISA));
+
+/*
+  Maps — 0 = floor, 1 = wall.
+  Verified solutions noted below each entry.
+*/
+const MAPS = [
+  {
+    name: 'Level 1 · First Boot',
+    desc: 'No walls. Get comfortable with the commands.',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    start: { r:4, c:1 },
+    goal:  { r:5, c:4 }
+    // MOVE_DOWN, MOVE_RIGHT ×3   →  4 commands
+  },
+  {
+    name: 'Level 2 · Access Denied',
+    desc: 'Walls block the direct path. Find a way around.',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,0,0,1,0,0],
+      [0,0,0,1,0,0],
+      [0,0,1,1,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    start: { r:1, c:1 },
+    goal:  { r:4, c:5 }
+    // MOVE_DOWN ×3, MOVE_RIGHT ×4   →  7 commands
+  },
+  {
+    name: 'Level 3 · Maze Protocol  ★',
+    desc: 'Navigate carefully. This run gets compiled to binary!',
+    grid: [
+      [0,0,0,0,0,0],
+      [1,1,1,1,0,0],
+      [0,0,0,0,0,0],
+      [0,1,1,1,0,1],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    start: { r:0, c:0 },
+    goal:  { r:4, c:4 }
+    // MOVE_RIGHT ×4, MOVE_DOWN ×4   →  8 commands
+    // Binary: 011 011 011 011 001 001 001 001
+  },
+  {
+    name: 'Level 4 · Core Dump',
+    desc: 'Hardest route yet. Plan every step before running.',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,1,1,1,1,0],
+      [0,0,0,0,1,0],
+      [1,1,0,1,1,0],
+      [0,0,0,1,0,0],
+      [0,0,0,1,0,0]
+    ],
+    start: { r:5, c:0 },
+    goal:  { r:0, c:5 }
+    // MOVE_RIGHT ×2, MOVE_UP ×3, MOVE_LEFT ×2, MOVE_UP ×2, MOVE_RIGHT ×5   →  14 commands
+  }
+];
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+const state = {
+  mapIdx:    0,
+  pos:       { r:0, c:0 },
+  trail:     new Set(),
+  history:   [[], [], [], []],
+  totalCmds: 0,
+  running:   false,
+  timer:     null
+};
+
+/* ════════════════════════════════════════
+   UTILS
+════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+/* ════════════════════════════════════════
+   GAME
+════════════════════════════════════════ */
+const Game = {
+
+  start() {
+    state.mapIdx    = 0;
+    state.history   = [[], [], [], []];
+    state.totalCmds = 0;
+    this.loadMap(0);
+    showPhase('p-game');
+  },
+
+  restart() { showPhase('p-intro'); },
+
+  loadMap(idx) {
+    const m       = MAPS[idx];
+    state.pos     = { ...m.start };
+    state.trail   = new Set([m.start.r + ',' + m.start.c]);
+    state.running = false;
+    if (state.timer) { clearTimeout(state.timer); state.timer = null; }
+
+    $('levelName').textContent = m.name;
+    $('levelDesc').textContent = m.desc;
+    $('codeTA').value          = '';
+    $('stepInfo').textContent  = '';
+    $('curCmd').textContent    = '-';
+    $('runBtn').disabled       = false;
+    $('resetBtn').disabled     = false;
+
+    this.buildPips();
+    this.renderGrid();
+    this.setStatus('idle', 'Ready. Write your program and press Run.');
+    this.updateLineNums();
+  },
+
+  buildPips() {
+    const el = $('pips');
+    el.innerHTML = '';
+    for (let i = 0; i < 4; i++) {
+      const d = document.createElement('div');
+      d.className = 'pip'
+        + (i <  state.mapIdx  ? ' done'   : '')
+        + (i === state.mapIdx ? ' active' : '');
+      d.textContent = i + 1;
+      el.appendChild(d);
+    }
+  },
+
+  renderGrid(errPos = null) {
+    const wrap = $('gridWrap');
+    wrap.innerHTML = '';
+    const m = MAPS[state.mapIdx];
+
+    // Top-left corner (blank)
+    const corner = document.createElement('div');
+    corner.className = 'axis-lbl';
+    wrap.appendChild(corner);
+
+    // Column labels
+    for (let c = 0; c < 6; c++) {
+      const lbl = document.createElement('div');
+      lbl.className = 'axis-lbl';
+      lbl.textContent = c;
+      wrap.appendChild(lbl);
+    }
+
+    // Rows
+    for (let r = 0; r < 6; r++) {
+      const rl = document.createElement('div');
+      rl.className = 'axis-lbl';
+      rl.textContent = r;
+      wrap.appendChild(rl);
+
+      for (let c = 0; c < 6; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        const isWall   = m.grid[r][c] === 1;
+        const isPlayer = r === state.pos.r && c === state.pos.c;
+        const isGoal   = r === m.goal.r    && c === m.goal.c;
+        const isErr    = errPos && r === errPos.r && c === errPos.c;
+        const isTrail  = state.trail.has(r + ',' + c) && !isPlayer;
+
+        if (isWall) {
+          cell.classList.add('cell-wall');
+        } else if (isErr) {
+          cell.classList.add('cell-floor', 'cell-error');
+        } else if (isPlayer && isGoal) {
+          cell.classList.add('cell-player', 'cell-goal', 'cell-reached');
+        } else if (isPlayer) {
+          cell.classList.add('cell-player');
+        } else if (isGoal) {
+          cell.classList.add('cell-goal');
+          const ring = document.createElement('div');
+          ring.className = 'goal-ring';
+          cell.appendChild(ring);
+        } else if (isTrail) {
+          cell.classList.add('cell-trail');
+        } else {
+          cell.classList.add('cell-floor');
+        }
+
+        wrap.appendChild(cell);
+      }
+    }
+  },
+
+  setStatus(type, msg) {
+    $('statusBar').className = 'status-bar s-' + type;
+    $('statusTxt').textContent = msg;
+  },
+
+  updateLineNums() {
+    const n = $('codeTA').value.split('\n').length;
+    $('lineNums').textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n');
+  },
+
+  insert(cmd) {
+    const ta  = $('codeTA');
+    const pos = ta.selectionStart;
+    const v   = ta.value;
+    const pre = v.slice(0, pos);
+    const nl  = pre.length > 0 && !pre.endsWith('\n') ? '\n' : '';
+    ta.value  = pre + nl + cmd + '\n' + v.slice(pos);
+    const np  = (pre + nl + cmd + '\n').length;
+    ta.setSelectionRange(np, np);
+    ta.focus();
+    this.updateLineNums();
+  },
+
+  run() {
+    if (state.running) return;
+
+    const lines = $('codeTA').value.split('\n');
+    const cmds  = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i].trim().toUpperCase();
+      if (raw === '' || raw.startsWith('//')) continue;
+
+      // Handle COMMAND*N shorthand (e.g. MOVE_RIGHT*3)
+      const repeatMatch = raw.match(/^([A-Z_]+)\((\d+)\)$/);
+      if (repeatMatch) {
+        const cmd = repeatMatch[1];
+        const n   = parseInt(repeatMatch[2], 10);
+        if (!VALID.has(cmd)) {
+          this.setStatus('err',
+            `Line ${i + 1}: "${repeatMatch[1]}" is not a valid command.`);
+          return;
+        }
+        if (n < 1 || n > 50) {
+          this.setStatus('err',
+            `Line ${i + 1}: repeat count must be between 1 and 50.`);
+          return;
+        }
+        for (let k = 0; k < n; k++) cmds.push(cmd);
+        continue;
+      }
+
+      if (!VALID.has(raw)) {
+        this.setStatus('err',
+          `Line ${i + 1}: "${lines[i].trim()}" is not a valid command.`);
+        return;
+      }
+      cmds.push(raw);
+    }
+
+    if (cmds.length === 0) {
+      this.setStatus('err', 'Error: no commands found. Write at least one command.');
+      return;
+    }
+
+    const m   = MAPS[state.mapIdx];
+    state.pos = { ...m.start };
+    state.trail = new Set([m.start.r + ',' + m.start.c]);
+
+    state.running      = true;
+    $('runBtn').disabled   = true;
+    $('resetBtn').disabled = true;
+
+    this.renderGrid();
+    this.setStatus('run', `Running ${cmds.length} command${cmds.length !== 1 ? 's' : ''}...`);
+    this._step(cmds, 0);
+  },
+
+  _step(cmds, i) {
+    if (i >= cmds.length) {
+      state.running          = false;
+      $('runBtn').disabled   = false;
+      $('resetBtn').disabled = false;
+      $('curCmd').textContent    = '- end -';
+      $('stepInfo').textContent  = `${cmds.length} cmd${cmds.length !== 1 ? 's' : ''} - goal not reached`;
+      this.setStatus('err',
+        'Ran out of commands without reaching the goal. Add more commands or fix your path.');
+      return;
+    }
+
+    const cmd         = cmds[i];
+    const { r, c }    = state.pos;
+    const m           = MAPS[state.mapIdx];
+
+    $('curCmd').textContent   = `Step ${i + 1} / ${cmds.length}:  ${cmd}`;
+    $('stepInfo').textContent = `${i + 1} / ${cmds.length}`;
+
+    let nr = r, nc = c;
+    if (cmd === 'MOVE_UP')    nr--;
+    if (cmd === 'MOVE_DOWN')  nr++;
+    if (cmd === 'MOVE_LEFT')  nc--;
+    if (cmd === 'MOVE_RIGHT') nc++;
+    // WAIT → no change
+
+    // Bounds check
+    if (nr < 0 || nr > 5 || nc < 0 || nc > 5) {
+      state.running          = false;
+      $('runBtn').disabled   = false;
+      $('resetBtn').disabled = false;
+      this.renderGrid({ r, c });
+      this.setStatus('err',
+        `Step ${i + 1} (${cmd}): stepped off the grid! Press Reset and try again.`);
+      return;
+    }
+
+    // Wall check
+    if (m.grid[nr][nc] === 1) {
+      state.running          = false;
+      $('runBtn').disabled   = false;
+      $('resetBtn').disabled = false;
+      this.renderGrid({ r, c });
+      this.setStatus('err',
+        `Step ${i + 1} (${cmd}): hit a wall at [${nr},${nc}]! Press Reset and try again.`);
+      return;
+    }
+
+    state.pos = { r: nr, c: nc };
+    state.trail.add(nr + ',' + nc);
+    this.renderGrid();
+
+    // Goal check
+    if (nr === m.goal.r && nc === m.goal.c) {
+      state.running          = false;
+      $('runBtn').disabled   = false;
+      $('resetBtn').disabled = false;
+
+      state.history[state.mapIdx] = [...cmds];
+      state.totalCmds += cmds.length;
+
+      $('curCmd').textContent   = '✓  Goal reached!';
+      $('stepInfo').textContent = `${cmds.length} command${cmds.length !== 1 ? 's' : ''} used`;
+
+      if (state.mapIdx < 3) {
+        this.setStatus('ok', `Level ${state.mapIdx + 1} complete! Loading next map...`);
+        state.timer = setTimeout(() => {
+          state.mapIdx++;
+          this.loadMap(state.mapIdx);
+        }, 1600);
+      } else {
+        this.setStatus('ok', 'All 4 levels done! Moving to the binary translation...');
+        state.timer = setTimeout(() => Binary.show(), 1900);
+      }
+      return;
+    }
+
+    state.timer = setTimeout(() => this._step(cmds, i + 1), 270);
+  },
+
+  reset() {
+    if (state.timer) clearTimeout(state.timer);
+    state.running = false;
+    this.loadMap(state.mapIdx);
+  },
+
+  showWin() {
+    $('ws-cmds').textContent = state.totalCmds;
+    $('ws-bits').textContent = state.totalCmds * 3;
+    showPhase('p-win');
+  }
+};
+
+/* ════════════════════════════════════════
+   BINARY PHASE
+════════════════════════════════════════ */
+
+// Reverse lookup: binary string -> command name
+const BIN_TO_CMD = Object.fromEntries(Object.entries(ISA).map(([k, v]) => [v, k]));
+
+const Binary = {
+  running: false,
+  timer:   null,
+
+  show() {
+    const cmds = state.history[2];   // Level 3 (index 2)
+
+    // Populate source code reference display
+    const sd = $('srcDisplay');
+    sd.innerHTML = '';
+    cmds.forEach((cmd, i) => {
+      const line = document.createElement('div');
+      line.innerHTML = `<span class="sd-num">${String(i + 1).padStart(2, '0')}</span>${cmd}`;
+      sd.appendChild(line);
+    });
+
+    // Clear binary editor
+    $('binTA').value         = '';
+    $('binLineNums').textContent = '1';
+    $('binStepInfo').textContent = '';
+    $('binCurCmd').textContent   = '-';
+    $('binRunBtn').disabled      = false;
+    $('binResetBtn').disabled    = false;
+
+    // Draw Level 3 grid from the start position
+    const m = MAPS[2];
+    this._pos   = { ...m.start };
+    this._trail = new Set([m.start.r + ',' + m.start.c]);
+    this._renderGrid();
+    this._setStatus('idle', 'Write your binary code on the right and press Run.');
+
+    showPhase('p-binary');
+  },
+
+  updateLineNums() {
+    const n = $('binTA').value.split('\n').length;
+    $('binLineNums').textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n');
+  },
+
+  _setStatus(type, msg) {
+    $('binStatusBar').className = 'status-bar s-' + type;
+    $('binStatusTxt').textContent = msg;
+  },
+
+  _pos: { r: 0, c: 0 },
+  _trail: new Set(),
+
+  _renderGrid(errPos = null) {
+    const wrap = $('binGridWrap');
+    wrap.innerHTML = '';
+    const m = MAPS[2];   // always Level 3
+
+    // Corner
+    const corner = document.createElement('div');
+    corner.className = 'axis-lbl';
+    wrap.appendChild(corner);
+
+    for (let c = 0; c < 6; c++) {
+      const lbl = document.createElement('div');
+      lbl.className = 'axis-lbl';
+      lbl.textContent = c;
+      wrap.appendChild(lbl);
+    }
+
+    for (let r = 0; r < 6; r++) {
+      const rl = document.createElement('div');
+      rl.className = 'axis-lbl';
+      rl.textContent = r;
+      wrap.appendChild(rl);
+
+      for (let c = 0; c < 6; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        const isWall   = m.grid[r][c] === 1;
+        const isPlayer = r === this._pos.r && c === this._pos.c;
+        const isGoal   = r === m.goal.r    && c === m.goal.c;
+        const isErr    = errPos && r === errPos.r && c === errPos.c;
+        const isTrail  = this._trail.has(r + ',' + c) && !isPlayer;
+
+        if (isWall) {
+          cell.classList.add('cell-wall');
+        } else if (isErr) {
+          cell.classList.add('cell-floor', 'cell-error');
+        } else if (isPlayer && isGoal) {
+          cell.classList.add('cell-player', 'cell-goal', 'cell-reached');
+        } else if (isPlayer) {
+          cell.classList.add('cell-player');
+        } else if (isGoal) {
+          cell.classList.add('cell-goal');
+          const ring = document.createElement('div');
+          ring.className = 'goal-ring';
+          cell.appendChild(ring);
+        } else if (isTrail) {
+          cell.classList.add('cell-trail');
+        } else {
+          cell.classList.add('cell-floor');
+        }
+
+        wrap.appendChild(cell);
+      }
+    }
+  },
+
+  reset() {
+    if (this.timer) clearTimeout(this.timer);
+    this.running = false;
+    const m = MAPS[2];
+    this._pos   = { ...m.start };
+    this._trail = new Set([m.start.r + ',' + m.start.c]);
+    $('binRunBtn').disabled  = false;
+    $('binResetBtn').disabled = false;
+    $('binCurCmd').textContent   = '-';
+    $('binStepInfo').textContent = '';
+    this._renderGrid();
+    this._setStatus('idle', 'Write your binary code on the right and press Run.');
+  },
+
+  run() {
+    if (this.running) return;
+
+    const lines = $('binTA').value.split('\n');
+    const cmds  = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i].trim();
+      if (raw === '' || raw.startsWith('//')) continue;
+
+      // Must be exactly 3 chars of 0/1
+      if (!/^[01]{3}$/.test(raw)) {
+        this._setStatus('err',
+          `Line ${i + 1}: "${raw}" is not a valid 3-bit code. Use only 0 and 1.`);
+        return;
+      }
+      if (!BIN_TO_CMD[raw]) {
+        this._setStatus('err',
+          `Line ${i + 1}: "${raw}" is not a code in the key (valid: 000-100).`);
+        return;
+      }
+      cmds.push(raw);
+    }
+
+    if (cmds.length === 0) {
+      this._setStatus('err', 'No binary codes found. Write at least one line.');
+      return;
+    }
+
+    // Reset grid to Level 3 start
+    const m   = MAPS[2];
+    this._pos   = { ...m.start };
+    this._trail = new Set([m.start.r + ',' + m.start.c]);
+
+    this.running          = true;
+    $('binRunBtn').disabled  = true;
+    $('binResetBtn').disabled = true;
+
+    this._renderGrid();
+    this._setStatus('run', `Running ${cmds.length} binary code${cmds.length !== 1 ? 's' : ''}...`);
+    this._step(cmds, 0);
+  },
+
+  _step(cmds, i) {
+    if (i >= cmds.length) {
+      this.running          = false;
+      $('binRunBtn').disabled  = false;
+      $('binResetBtn').disabled = false;
+      $('binCurCmd').textContent   = '- end -';
+      $('binStepInfo').textContent = `${cmds.length} codes - goal not reached`;
+      this._setStatus('err', 'Ran out of codes without reaching the goal. Check your translation.');
+      return;
+    }
+
+    const bits = cmds[i];
+    const cmd  = BIN_TO_CMD[bits];
+    const { r, c } = this._pos;
+    const m = MAPS[2];
+
+    $('binCurCmd').textContent   = `Step ${i + 1} / ${cmds.length}:  ${bits}  (${cmd})`;
+    $('binStepInfo').textContent = `${i + 1} / ${cmds.length}`;
+
+    let nr = r, nc = c;
+    if (cmd === 'MOVE_UP')    nr--;
+    if (cmd === 'MOVE_DOWN')  nr++;
+    if (cmd === 'MOVE_LEFT')  nc--;
+    if (cmd === 'MOVE_RIGHT') nc++;
+
+    // Bounds check
+    if (nr < 0 || nr > 5 || nc < 0 || nc > 5) {
+      this.running          = false;
+      $('binRunBtn').disabled  = false;
+      $('binResetBtn').disabled = false;
+      this._renderGrid({ r, c });
+      this._setStatus('err',
+        `Step ${i + 1} (${bits} = ${cmd}): stepped off the grid. Check your translation.`);
+      return;
+    }
+
+    // Wall check
+    if (m.grid[nr][nc] === 1) {
+      this.running          = false;
+      $('binRunBtn').disabled  = false;
+      $('binResetBtn').disabled = false;
+      this._renderGrid({ r, c });
+      this._setStatus('err',
+        `Step ${i + 1} (${bits} = ${cmd}): hit a wall at [${nr},${nc}]. Check your translation.`);
+      return;
+    }
+
+    this._pos = { r: nr, c: nc };
+    this._trail.add(nr + ',' + nc);
+    this._renderGrid();
+
+    // Goal check
+    if (nr === m.goal.r && nc === m.goal.c) {
+      this.running          = false;
+      $('binRunBtn').disabled  = false;
+      $('binResetBtn').disabled = false;
+
+      $('binCurCmd').textContent   = '✓  Goal reached!';
+      $('binStepInfo').textContent = `${cmds.length} binary codes used`;
+      this._setStatus('ok', 'Goal reached with binary code! Moving to the results screen...');
+      this.timer = setTimeout(() => Game.showWin(), 1800);
+      return;
+    }
+
+    this.timer = setTimeout(() => this._step(cmds, i + 1), 270);
+  }
+};
+</script>
+</body>
+</html>
