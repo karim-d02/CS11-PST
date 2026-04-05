@@ -378,6 +378,69 @@
     .lesson code      { font-family: monospace; color: var(--yellow); }
     .lesson code.bin  { color: var(--purple); }
 
+    /* ══════════════════════════════════════
+       PHASE 3a — DEBUG LEVELS
+    ══════════════════════════════════════ */
+    #p-debug.active {
+      display: flex; flex-direction: column;
+      padding: 1rem; gap: .75rem;
+    }
+
+    .debug-topbar {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 8px; padding: .6rem 1rem;
+    }
+    .debug-pips { display: flex; gap: .4rem; }
+    .debug-pip {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .65rem; font-weight: 700;
+      background: var(--surf2); border: 2px solid var(--border); color: var(--muted);
+    }
+    .debug-pip.done   { background: var(--yellow); border-color: var(--yellow); color: #000; }
+    .debug-pip.active { background: var(--purple);  border-color: var(--purple);  color: #000; }
+
+    .debug-badge {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--yellow);
+      background: rgba(227,179,65,.12); border: 1px solid rgba(227,179,65,.3);
+      border-radius: 4px; padding: .15rem .55rem;
+    }
+
+    .debug-hint {
+      background: rgba(227,179,65,.07); border: 1px solid rgba(227,179,65,.25);
+      border-radius: 6px; padding: .5rem .85rem;
+      font-size: .82rem; color: var(--yellow); line-height: 1.5;
+    }
+    .debug-hint strong { color: var(--text); }
+
+    /* ══════════════════════════════════════
+       PHASE 3b — REFLECTION
+    ══════════════════════════════════════ */
+    #p-reflect.active {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem 1.5rem; gap: 1.5rem;
+    }
+    .reflect-title {
+      font-size: 1.4rem; font-weight: 800; color: var(--purple); text-align: center;
+    }
+    .reflect-q {
+      background: var(--surf1); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.4rem 1.75rem;
+      max-width: 680px; width: 100%;
+      color: var(--text); font-size: .95rem; line-height: 1.75;
+    }
+    .reflect-ta {
+      width: 100%; background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      padding: .75rem 1rem; margin-top: 1rem;
+      font-family: 'Segoe UI', system-ui, sans-serif; font-size: .9rem; line-height: 1.6;
+      resize: vertical; min-height: 130px; outline: none;
+    }
+    .reflect-ta::placeholder { color: rgba(139,148,158,.4); }
+
     /* ── Responsive ── */
     @media (max-width: 860px) {
       .game-layout { grid-template-columns: 1fr; }
@@ -406,7 +469,7 @@
       <span style="color:var(--green)">◎</span> on the 6x6 grid.<br><br>
       <strong style="color:var(--text)">Rules:</strong> One command per line. Hitting a wall
       or stepping off the grid will stop your program - press Reset and try again. Finish all
-      <strong style="color:var(--text)">4 levels</strong>, then translate your Level 3 commands
+      <strong style="color:var(--text)">5 levels</strong>, then translate your Level 5 commands
       into binary, just like a compiler does. You can also repeat a command using
       <strong style="color:var(--text)">COMMAND(N)</strong> (e.g. MOVE_RIGHT(3)).
     </p>
@@ -485,16 +548,6 @@
         <span class="step-info" id="stepInfo"></span>
       </div>
 
-      <div class="quick-insert">
-        <div class="qi-label">Quick Insert - click to add a command</div>
-        <div class="chips">
-          <span class="chip" onclick="Game.insert('MOVE_UP')">MOVE_UP</span>
-          <span class="chip" onclick="Game.insert('MOVE_DOWN')">MOVE_DOWN</span>
-          <span class="chip" onclick="Game.insert('MOVE_LEFT')">MOVE_LEFT</span>
-          <span class="chip" onclick="Game.insert('MOVE_RIGHT')">MOVE_RIGHT</span>
-          <span class="chip" onclick="Game.insert('WAIT')">WAIT</span>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -507,13 +560,13 @@
   <div class="bin-topbar">
     <h2>Translate to Binary</h2>
     <p>
-      You finished Level 3. Now rewrite that same program using binary codes instead of commands.
+      You finished Level 5. Now rewrite that same program using binary codes instead of commands.
       Use the key on the right as a reference. Press Run to see if your binary code reaches the goal.
     </p>
   </div>
 
   <div class="bin-layout">
-    <!-- Left: Level 3 grid plays back here -->
+    <!-- Left: Level 5 grid plays back here -->
     <div class="grid-side">
       <div class="grid-wrap" id="binGridWrap"></div>
       <div class="cur-cmd" id="binCurCmd">-</div>
@@ -528,7 +581,7 @@
       <div class="bin-refs">
         <!-- Source code reference -->
         <div class="card" style="padding:1rem 1.1rem;">
-          <div class="card-label">Your Level 3 Source Code</div>
+          <div class="card-label">Your Level 5 Source Code</div>
           <div class="src-display" id="srcDisplay"></div>
         </div>
         <!-- Binary key -->
@@ -578,17 +631,87 @@
 
 
 <!-- ══════════════════════════════════════
+     PHASE 3a — DEBUG LEVELS
+══════════════════════════════════════ -->
+<div id="p-debug" class="phase">
+  <div class="debug-topbar">
+    <div class="debug-pips" id="debugPips"></div>
+    <span class="debug-badge">Debug Mode</span>
+    <div class="level-info">
+      <h2 id="dbgLevelName"></h2>
+      <p  id="dbgLevelDesc"></p>
+    </div>
+  </div>
+
+  <div class="debug-hint" id="dbgHint"></div>
+
+  <div class="game-layout">
+    <!-- Grid -->
+    <div class="grid-side">
+      <div class="grid-wrap" id="dbgGridWrap"></div>
+      <div class="cur-cmd"  id="dbgCurCmd">-</div>
+      <div class="status-bar s-idle" id="dbgStatusBar">
+        <div class="s-dot"></div>
+        <span id="dbgStatusTxt">Find the bug and fix it, then press Run.</span>
+      </div>
+    </div>
+
+    <!-- Editor -->
+    <div class="editor-side">
+      <div class="editor-chrome">
+        <div class="chrome-bar">
+          <span class="traffic t-r"></span>
+          <span class="traffic t-y"></span>
+          <span class="traffic t-g"></span>
+          <span class="chrome-name" id="dbgFileName">program.src</span>
+        </div>
+        <div class="editor-body">
+          <div class="line-nums" id="dbgLineNums">1</div>
+          <textarea class="code-ta" id="dbgTA"
+            spellcheck="false"
+            oninput="DebugGame.updateLineNums()"></textarea>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-primary"   id="dbgRunBtn"   onclick="DebugGame.run()">▶ Run</button>
+        <button class="btn btn-secondary" id="dbgResetBtn" onclick="DebugGame.reset()">↺ Reset</button>
+        <span class="step-info" id="dbgStepInfo"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PHASE 3b — REFLECTION
+══════════════════════════════════════ -->
+<div id="p-reflect" class="phase">
+  <div class="reflect-title">One Last Question</div>
+  <div class="reflect-q">
+    <strong>In your own words, what did you just do in the binary phase, and how does that relate to how a real CPU runs your Python code?</strong>
+    <textarea class="reflect-ta" id="reflectTA"
+      placeholder="Type your answer here…"
+      spellcheck="false"></textarea>
+  </div>
+  <button class="btn btn-success" onclick="Reflect.submit()" style="font-size:.95rem;padding:.65rem 2rem;">
+    Submit &amp; See Results
+  </button>
+</div>
+
+
+<!-- ══════════════════════════════════════
      PHASE 4 — WIN
 ══════════════════════════════════════ -->
 <div id="p-win" class="phase">
   <div class="win-icon">🏁</div>
   <div class="win-title">All Done!</div>
-  <div class="win-sub">All 4 levels cleared and binary translation correct.</div>
+  <div class="win-sub">All 5 levels cleared and binary translation correct.</div>
 
   <div class="stat-row">
     <div class="stat"><div class="stat-n" id="ws-cmds">0</div><div class="stat-l">Total Commands</div></div>
     <div class="stat"><div class="stat-n" id="ws-bits">0</div><div class="stat-l">Bits Generated</div></div>
-    <div class="stat"><div class="stat-n">4</div>              <div class="stat-l">Maps Cleared</div></div>
+    <div class="stat"><div class="stat-n">5</div>              <div class="stat-l">Maps Cleared</div></div>
   </div>
 
   <div class="lesson">
@@ -662,8 +785,8 @@ const MAPS = [
     // MOVE_DOWN ×3, MOVE_RIGHT ×4   →  7 commands
   },
   {
-    name: 'Level 3 · Maze Protocol  ★',
-    desc: 'Navigate carefully. This run gets compiled to binary!',
+    name: 'Level 3 · Maze Protocol',
+    desc: 'Walls in every direction. Find the gap.',
     grid: [
       [0,0,0,0,0,0],
       [1,1,1,1,0,0],
@@ -679,18 +802,58 @@ const MAPS = [
   },
   {
     name: 'Level 4 · Core Dump',
-    desc: 'Hardest route yet. Plan every step before running.',
+    desc: 'More walls, more dead ends. Plan carefully.',
     grid: [
-      [0,0,0,0,0,0],
-      [0,1,1,1,1,0],
-      [0,0,0,0,1,0],
-      [1,1,0,1,1,0],
-      [0,0,0,1,0,0],
-      [0,0,0,1,0,0]
+      [0,1,1,1,0,0],
+      [0,0,0,0,0,1],
+      [0,1,1,0,0,1],
+      [0,0,0,0,0,1],
+      [1,1,0,1,1,1],
+      [0,0,0,1,1,1]
     ],
     start: { r:5, c:0 },
     goal:  { r:0, c:5 }
-    // MOVE_RIGHT ×2, MOVE_UP ×3, MOVE_LEFT ×2, MOVE_UP ×2, MOVE_RIGHT ×5   →  14 commands
+    /*
+      Verified solution (18 commands):
+      MOVE_RIGHT, MOVE_RIGHT, MOVE_UP, MOVE_UP, MOVE_LEFT, MOVE_LEFT,
+      MOVE_UP, MOVE_UP, MOVE_RIGHT, MOVE_RIGHT, MOVE_RIGHT, MOVE_DOWN,
+      MOVE_DOWN, MOVE_RIGHT, MOVE_UP, MOVE_UP, MOVE_UP, MOVE_RIGHT
+
+      Path: (5,0)→R(5,1)→R(5,2)→U(4,2)→U(3,2)→L(3,1)→L(3,0)→
+            U(2,0)→U(1,0)→R(1,1)→R(1,2)→R(1,3)→D(2,3)→D(3,3)→
+            R(3,4)→U(2,4)→U(1,4)→U(0,4)→R(0,5) = 18 commands
+
+      Dead ends: (0,0) open but (0,1)=wall traps you;
+      (1,3)→U(0,3)=wall; (3,4)→D(4,4)=wall
+    */
+  },
+  {
+    name: 'Level 5 · Zero-Day  ★',
+    desc: 'The final challenge. This run gets compiled to binary!',
+    grid: [
+      [0,0,0,1,1,1],
+      [1,1,0,1,1,1],
+      [1,0,0,1,0,0],
+      [0,0,1,0,0,0],
+      [0,0,0,0,1,0],
+      [1,1,0,0,1,0]
+    ],
+    start: { r:0, c:0 },
+    goal:  { r:5, c:5 }
+    /*
+      Verified solution (20 commands):
+      MOVE_RIGHT, MOVE_RIGHT, MOVE_DOWN, MOVE_DOWN, MOVE_LEFT,
+      MOVE_DOWN, MOVE_LEFT, MOVE_DOWN, MOVE_RIGHT, MOVE_RIGHT,
+      MOVE_DOWN, MOVE_RIGHT, MOVE_UP, MOVE_UP, MOVE_RIGHT,
+      MOVE_UP, MOVE_RIGHT, MOVE_DOWN, MOVE_DOWN, MOVE_DOWN
+
+      Path: (0,0)→R(0,1)→R(0,2)→D(1,2)→D(2,2)→L(2,1)→D(3,1)→L(3,0)→
+            D(4,0)→R(4,1)→R(4,2)→D(5,2)→R(5,3)→U(4,3)→U(3,3)→R(3,4)→
+            U(2,4)→R(2,5)→D(3,5)→D(4,5)→D(5,5) = 20 commands
+
+      Dead ends: (0,0)→D(1,0)=wall; (1,2)→L(1,1)=wall or R(1,3)=wall;
+      (3,4)→D(4,4)=wall; (2,4)→L(2,3)=wall
+    */
   }
 ];
 
@@ -701,7 +864,7 @@ const state = {
   mapIdx:    0,
   pos:       { r:0, c:0 },
   trail:     new Set(),
-  history:   [[], [], [], []],
+  history:   [[], [], [], [], []],
   totalCmds: 0,
   running:   false,
   timer:     null
@@ -724,7 +887,7 @@ const Game = {
 
   start() {
     state.mapIdx    = 0;
-    state.history   = [[], [], [], []];
+    state.history   = [[], [], [], [], []];
     state.totalCmds = 0;
     this.loadMap(0);
     showPhase('p-game');
@@ -756,7 +919,7 @@ const Game = {
   buildPips() {
     const el = $('pips');
     el.innerHTML = '';
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const d = document.createElement('div');
       d.className = 'pip'
         + (i <  state.mapIdx  ? ' done'   : '')
@@ -967,14 +1130,14 @@ const Game = {
       $('curCmd').textContent   = '✓  Goal reached!';
       $('stepInfo').textContent = `${cmds.length} command${cmds.length !== 1 ? 's' : ''} used`;
 
-      if (state.mapIdx < 3) {
+      if (state.mapIdx < 4) {
         this.setStatus('ok', `Level ${state.mapIdx + 1} complete! Loading next map...`);
         state.timer = setTimeout(() => {
           state.mapIdx++;
           this.loadMap(state.mapIdx);
         }, 1600);
       } else {
-        this.setStatus('ok', 'All 4 levels done! Moving to the binary translation...');
+        this.setStatus('ok', 'All 5 levels done! Moving to the binary translation...');
         state.timer = setTimeout(() => Binary.show(), 1900);
       }
       return;
@@ -1008,7 +1171,7 @@ const Binary = {
   timer:   null,
 
   show() {
-    const cmds = state.history[2];   // Level 3 (index 2)
+    const cmds = state.history[4];   // Level 5 (index 4)
 
     // Populate source code reference display
     const sd = $('srcDisplay');
@@ -1027,8 +1190,8 @@ const Binary = {
     $('binRunBtn').disabled      = false;
     $('binResetBtn').disabled    = false;
 
-    // Draw Level 3 grid from the start position
-    const m = MAPS[2];
+    // Draw Level 5 grid from the start position
+    const m = MAPS[4];
     this._pos   = { ...m.start };
     this._trail = new Set([m.start.r + ',' + m.start.c]);
     this._renderGrid();
@@ -1053,7 +1216,7 @@ const Binary = {
   _renderGrid(errPos = null) {
     const wrap = $('binGridWrap');
     wrap.innerHTML = '';
-    const m = MAPS[2];   // always Level 3
+    const m = MAPS[4];   // always Level 5
 
     // Corner
     const corner = document.createElement('div');
@@ -1110,7 +1273,7 @@ const Binary = {
   reset() {
     if (this.timer) clearTimeout(this.timer);
     this.running = false;
-    const m = MAPS[2];
+    const m = MAPS[4];
     this._pos   = { ...m.start };
     this._trail = new Set([m.start.r + ',' + m.start.c]);
     $('binRunBtn').disabled  = false;
@@ -1150,8 +1313,8 @@ const Binary = {
       return;
     }
 
-    // Reset grid to Level 3 start
-    const m   = MAPS[2];
+    // Reset grid to Level 5 start
+    const m   = MAPS[4];
     this._pos   = { ...m.start };
     this._trail = new Set([m.start.r + ',' + m.start.c]);
 
@@ -1178,7 +1341,7 @@ const Binary = {
     const bits = cmds[i];
     const cmd  = BIN_TO_CMD[bits];
     const { r, c } = this._pos;
-    const m = MAPS[2];
+    const m = MAPS[4];
 
     $('binCurCmd').textContent   = `Step ${i + 1} / ${cmds.length}:  ${bits}  (${cmd})`;
     $('binStepInfo').textContent = `${i + 1} / ${cmds.length}`;
@@ -1223,12 +1386,402 @@ const Binary = {
 
       $('binCurCmd').textContent   = '✓  Goal reached!';
       $('binStepInfo').textContent = `${cmds.length} binary codes used`;
-      this._setStatus('ok', 'Goal reached with binary code! Moving to the results screen...');
-      this.timer = setTimeout(() => Game.showWin(), 1800);
+      this._setStatus('ok', 'Goal reached with binary code! Moving to the debug levels...');
+      this.timer = setTimeout(() => DebugGame.show(0), 1800);
       return;
     }
 
     this.timer = setTimeout(() => this._step(cmds, i + 1), 270);
+  }
+};
+
+/* ════════════════════════════════════════
+   DEBUG LEVELS
+════════════════════════════════════════ */
+/*
+  validationType:
+    'source'     — normal named-command validation (existing Game.run logic)
+    'binary'     — 3-bit binary codes only (existing Binary.run logic)
+    'sourceOnly' — named commands only; rejects binary codes even if structurally valid
+*/
+const DEBUG_LEVELS = [
+  {
+    name: 'Debug 1 · Source Code Bug',
+    desc: 'One command is wrong. Find it and fix it.',
+    hint: '<strong>Bug type: wrong direction.</strong> Read through each command and trace the path on the grid. One command sends the player the wrong way.',
+    fileName: 'buggy_program.src',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    start: { r:2, c:0 },
+    goal:  { r:2, c:4 },
+    // Correct path: MOVE_RIGHT ×4  (stays on row 2)
+    // Bug: line 3 is MOVE_DOWN instead of MOVE_RIGHT → player lands at (3,3), not (2,4)
+    buggyCode: 'MOVE_RIGHT\nMOVE_RIGHT\nMOVE_DOWN\nMOVE_RIGHT',
+    validationType: 'source'
+  },
+  {
+    name: 'Debug 2 · Binary Bug',
+    desc: 'One binary code is wrong. Use the key to find it.',
+    hint: '<strong>Bug type: wrong binary code.</strong> Each 3-bit code maps to a command — check the key. One code sends the player the wrong direction.',
+    fileName: 'buggy_program.bin',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    start: { r:1, c:0 },
+    goal:  { r:1, c:4 },
+    // Correct: 011 011 011 011  (MOVE_RIGHT ×4, stays on row 1)
+    // Bug: 2nd code is 000 (MOVE_UP) instead of 011 → player jumps to row 0 and misses goal
+    buggyCode: '011\n000\n011\n011',
+    validationType: 'binary'
+  },
+  {
+    name: 'Debug 3 · Mixed Code — Rewrite in Source',
+    desc: 'Binary and named commands are mixed. Rewrite it entirely in named commands and fix the bug.',
+    hint: '<strong>Bug type: mixed code + wrong direction.</strong> Binary codes are not valid here — every line must be a named command. Also, one of the directions is wrong — trace the path to find it.',
+    fileName: 'messy_program.src',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0],
+      [0,0,0,0,0,0]
+    ],
+    start: { r:0, c:0 },
+    goal:  { r:2, c:3 },
+    // Correct: MOVE_RIGHT MOVE_RIGHT MOVE_RIGHT MOVE_DOWN MOVE_DOWN  (5 cmds)
+    // Path: (0,0)→R(0,1)→R(0,2)→R(0,3)→D(1,3)→D(2,3) ✓
+    // Buggy mixed: MOVE_RIGHT, 011 (binary for RIGHT but invalid here), MOVE_RIGHT, MOVE_UP, MOVE_DOWN
+    // Two issues: line 2 is binary (must become MOVE_RIGHT), line 4 is MOVE_UP (should be MOVE_DOWN)
+    buggyCode: 'MOVE_RIGHT\n011\nMOVE_RIGHT\nMOVE_UP\nMOVE_DOWN',
+    validationType: 'sourceOnly'
+  }
+];
+
+const debugState = {
+  idx:     0,
+  pos:     { r:0, c:0 },
+  trail:   new Set(),
+  running: false,
+  timer:   null
+};
+
+const DebugGame = {
+
+  show(idx) {
+    debugState.idx     = idx;
+    debugState.running = false;
+    if (debugState.timer) { clearTimeout(debugState.timer); debugState.timer = null; }
+
+    const d = DEBUG_LEVELS[idx];
+    debugState.pos   = { ...d.start };
+    debugState.trail = new Set([d.start.r + ',' + d.start.c]);
+
+    $('dbgLevelName').textContent = d.name;
+    $('dbgLevelDesc').textContent = d.desc;
+    $('dbgHint').innerHTML        = d.hint;
+    $('dbgFileName').textContent  = d.fileName;
+    $('dbgTA').value              = d.buggyCode;
+    $('dbgStepInfo').textContent  = '';
+    $('dbgCurCmd').textContent    = '-';
+    $('dbgRunBtn').disabled       = false;
+    $('dbgResetBtn').disabled     = false;
+
+    this.buildPips();
+    this.renderGrid();
+    this.setStatus('idle', 'Find the bug and fix it, then press Run.');
+    this.updateLineNums();
+    showPhase('p-debug');
+  },
+
+  buildPips() {
+    const el = $('debugPips');
+    el.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const d = document.createElement('div');
+      d.className = 'debug-pip'
+        + (i <  debugState.idx  ? ' done'   : '')
+        + (i === debugState.idx ? ' active' : '');
+      d.textContent = 'D' + (i + 1);
+      el.appendChild(d);
+    }
+  },
+
+  renderGrid(errPos = null) {
+    const wrap = $('dbgGridWrap');
+    wrap.innerHTML = '';
+    const d = DEBUG_LEVELS[debugState.idx];
+
+    const corner = document.createElement('div');
+    corner.className = 'axis-lbl';
+    wrap.appendChild(corner);
+
+    for (let c = 0; c < 6; c++) {
+      const lbl = document.createElement('div');
+      lbl.className = 'axis-lbl';
+      lbl.textContent = c;
+      wrap.appendChild(lbl);
+    }
+
+    for (let r = 0; r < 6; r++) {
+      const rl = document.createElement('div');
+      rl.className = 'axis-lbl';
+      rl.textContent = r;
+      wrap.appendChild(rl);
+
+      for (let c = 0; c < 6; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        const isWall   = d.grid[r][c] === 1;
+        const isPlayer = r === debugState.pos.r && c === debugState.pos.c;
+        const isGoal   = r === d.goal.r && c === d.goal.c;
+        const isErr    = errPos && r === errPos.r && c === errPos.c;
+        const isTrail  = debugState.trail.has(r + ',' + c) && !isPlayer;
+
+        if (isWall) {
+          cell.classList.add('cell-wall');
+        } else if (isErr) {
+          cell.classList.add('cell-floor', 'cell-error');
+        } else if (isPlayer && isGoal) {
+          cell.classList.add('cell-player', 'cell-goal', 'cell-reached');
+        } else if (isPlayer) {
+          cell.classList.add('cell-player');
+        } else if (isGoal) {
+          cell.classList.add('cell-goal');
+          const ring = document.createElement('div');
+          ring.className = 'goal-ring';
+          cell.appendChild(ring);
+        } else if (isTrail) {
+          cell.classList.add('cell-trail');
+        } else {
+          cell.classList.add('cell-floor');
+        }
+
+        wrap.appendChild(cell);
+      }
+    }
+  },
+
+  setStatus(type, msg) {
+    $('dbgStatusBar').className = 'status-bar s-' + type;
+    $('dbgStatusTxt').textContent = msg;
+  },
+
+  updateLineNums() {
+    const n = $('dbgTA').value.split('\n').length;
+    $('dbgLineNums').textContent = Array.from({ length: n }, (_, i) => i + 1).join('\n');
+  },
+
+  reset() {
+    if (debugState.timer) clearTimeout(debugState.timer);
+    debugState.running = false;
+    const d = DEBUG_LEVELS[debugState.idx];
+    debugState.pos   = { ...d.start };
+    debugState.trail = new Set([d.start.r + ',' + d.start.c]);
+    $('dbgTA').value             = d.buggyCode;
+    $('dbgStepInfo').textContent = '';
+    $('dbgCurCmd').textContent   = '-';
+    $('dbgRunBtn').disabled      = false;
+    $('dbgResetBtn').disabled    = false;
+    this.renderGrid();
+    this.setStatus('idle', 'Find the bug and fix it, then press Run.');
+    this.updateLineNums();
+  },
+
+  run() {
+    if (debugState.running) return;
+    const d = DEBUG_LEVELS[debugState.idx];
+
+    if (d.validationType === 'binary') {
+      this._runBinary();
+    } else {
+      this._runSource(d.validationType === 'sourceOnly');
+    }
+  },
+
+  _runSource(sourceOnly) {
+    const lines = $('dbgTA').value.split('\n');
+    const cmds  = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i].trim().toUpperCase();
+      if (raw === '' || raw.startsWith('//')) continue;
+
+      // sourceOnly mode: reject binary codes explicitly
+      if (sourceOnly && /^[01]{3}$/.test(raw)) {
+        this.setStatus('err',
+          `Line ${i + 1}: "${lines[i].trim()}" is a binary code — rewrite everything as named commands.`);
+        return;
+      }
+
+      const repeatMatch = raw.match(/^([A-Z_]+)\((\d+)\)$/);
+      if (repeatMatch) {
+        const cmd = repeatMatch[1];
+        const n   = parseInt(repeatMatch[2], 10);
+        if (!VALID.has(cmd)) {
+          this.setStatus('err', `Line ${i + 1}: "${repeatMatch[1]}" is not a valid command.`);
+          return;
+        }
+        if (n < 1 || n > 50) {
+          this.setStatus('err', `Line ${i + 1}: repeat count must be between 1 and 50.`);
+          return;
+        }
+        for (let k = 0; k < n; k++) cmds.push(cmd);
+        continue;
+      }
+
+      if (!VALID.has(raw)) {
+        this.setStatus('err', `Line ${i + 1}: "${lines[i].trim()}" is not a valid command.`);
+        return;
+      }
+      cmds.push(raw);
+    }
+
+    if (cmds.length === 0) {
+      this.setStatus('err', 'No commands found. Fix the bug and try again.');
+      return;
+    }
+
+    const d = DEBUG_LEVELS[debugState.idx];
+    debugState.pos   = { ...d.start };
+    debugState.trail = new Set([d.start.r + ',' + d.start.c]);
+    debugState.running = true;
+    $('dbgRunBtn').disabled  = true;
+    $('dbgResetBtn').disabled = true;
+    this.renderGrid();
+    this.setStatus('run', `Running ${cmds.length} command${cmds.length !== 1 ? 's' : ''}...`);
+    this._step(cmds, 0, false);
+  },
+
+  _runBinary() {
+    const lines = $('dbgTA').value.split('\n');
+    const cmds  = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i].trim();
+      if (raw === '' || raw.startsWith('//')) continue;
+      if (!/^[01]{3}$/.test(raw)) {
+        this.setStatus('err', `Line ${i + 1}: "${raw}" is not a valid 3-bit code. Use only 0 and 1.`);
+        return;
+      }
+      if (!BIN_TO_CMD[raw]) {
+        this.setStatus('err', `Line ${i + 1}: "${raw}" is not in the binary key.`);
+        return;
+      }
+      cmds.push(raw);
+    }
+
+    if (cmds.length === 0) {
+      this.setStatus('err', 'No binary codes found. Fix the bug and try again.');
+      return;
+    }
+
+    const d = DEBUG_LEVELS[debugState.idx];
+    debugState.pos   = { ...d.start };
+    debugState.trail = new Set([d.start.r + ',' + d.start.c]);
+    debugState.running = true;
+    $('dbgRunBtn').disabled  = true;
+    $('dbgResetBtn').disabled = true;
+    this.renderGrid();
+    this.setStatus('run', `Running ${cmds.length} binary code${cmds.length !== 1 ? 's' : ''}...`);
+    this._step(cmds, 0, true);
+  },
+
+  _step(cmds, i, isBinary) {
+    const d = DEBUG_LEVELS[debugState.idx];
+
+    if (i >= cmds.length) {
+      debugState.running = false;
+      $('dbgRunBtn').disabled  = false;
+      $('dbgResetBtn').disabled = false;
+      $('dbgCurCmd').textContent   = '- end -';
+      $('dbgStepInfo').textContent = `${cmds.length} ${isBinary ? 'codes' : 'commands'} — goal not reached`;
+      this.setStatus('err', 'Ran out of commands without reaching the goal. There\'s still a bug — check again.');
+      return;
+    }
+
+    const raw = cmds[i];
+    const cmd = isBinary ? BIN_TO_CMD[raw] : raw;
+    const { r, c } = debugState.pos;
+
+    $('dbgCurCmd').textContent   = isBinary
+      ? `Step ${i + 1} / ${cmds.length}:  ${raw}  (${cmd})`
+      : `Step ${i + 1} / ${cmds.length}:  ${cmd}`;
+    $('dbgStepInfo').textContent = `${i + 1} / ${cmds.length}`;
+
+    let nr = r, nc = c;
+    if (cmd === 'MOVE_UP')    nr--;
+    if (cmd === 'MOVE_DOWN')  nr++;
+    if (cmd === 'MOVE_LEFT')  nc--;
+    if (cmd === 'MOVE_RIGHT') nc++;
+
+    if (nr < 0 || nr > 5 || nc < 0 || nc > 5) {
+      debugState.running = false;
+      $('dbgRunBtn').disabled  = false;
+      $('dbgResetBtn').disabled = false;
+      this.renderGrid({ r, c });
+      this.setStatus('err', `Step ${i + 1} (${cmd}): stepped off the grid. Still a bug in there!`);
+      return;
+    }
+
+    if (d.grid[nr][nc] === 1) {
+      debugState.running = false;
+      $('dbgRunBtn').disabled  = false;
+      $('dbgResetBtn').disabled = false;
+      this.renderGrid({ r, c });
+      this.setStatus('err', `Step ${i + 1} (${cmd}): hit a wall at [${nr},${nc}]. Still a bug!`);
+      return;
+    }
+
+    debugState.pos = { r: nr, c: nc };
+    debugState.trail.add(nr + ',' + nc);
+    this.renderGrid();
+
+    if (nr === d.goal.r && nc === d.goal.c) {
+      debugState.running = false;
+      $('dbgRunBtn').disabled  = false;
+      $('dbgResetBtn').disabled = false;
+      $('dbgCurCmd').textContent   = '✓  Bug fixed! Goal reached!';
+      $('dbgStepInfo').textContent = `${cmds.length} ${isBinary ? 'codes' : 'commands'} used`;
+
+      if (debugState.idx < 2) {
+        this.setStatus('ok', `Debug ${debugState.idx + 1} solved! Loading next debug level...`);
+        debugState.timer = setTimeout(() => {
+          this.show(debugState.idx + 1);
+        }, 1600);
+      } else {
+        this.setStatus('ok', 'All debug levels solved! Moving to the reflection...');
+        debugState.timer = setTimeout(() => Reflect.show(), 1900);
+      }
+      return;
+    }
+
+    debugState.timer = setTimeout(() => this._step(cmds, i + 1, isBinary), 270);
+  }
+};
+
+/* ════════════════════════════════════════
+   REFLECTION PHASE
+════════════════════════════════════════ */
+const Reflect = {
+  show() {
+    $('reflectTA').value = '';
+    showPhase('p-reflect');
+  },
+  submit() {
+    Game.showWin();
   }
 };
 </script>
