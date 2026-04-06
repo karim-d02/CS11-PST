@@ -458,20 +458,19 @@
 <div id="p-intro" class="phase active">
   <div>
     <div class="logo-title">&lt;Code Runner /&gt;</div>
-    <div class="logo-sub">Navigate using source code. Then translate it to machine code.</div>
+    <div class="logo-sub">Write code to move your character. You'll switch to binary later.</div>
   </div>
 
   <div class="card">
     <div class="card-label">How to Play</div>
     <p>
-      Type <strong style="color:var(--text)">commands</strong> into the editor to move the
+      Type <strong style="color:var(--text)">commands</strong> in the editor to move the
       player <span style="color:var(--blue)">●</span> to the goal
       <span style="color:var(--green)">◎</span> on the 6x6 grid.<br><br>
-      <strong style="color:var(--text)">Rules:</strong> One command per line. Hitting a wall
-      or stepping off the grid will stop your program - press Reset and try again. Finish all
-      <strong style="color:var(--text)">5 levels</strong>, then translate your Level 5 commands
-      into binary, just like a compiler does. You can also repeat a command using
-      <strong style="color:var(--text)">COMMAND(N)</strong> (e.g. MOVE_RIGHT(3)).
+      <strong style="color:var(--text)">Rules:</strong> Put one command per line. Hitting a wall
+      or stepping off the grid will stop your program. Press Reset and try again. Finish all
+      <strong style="color:var(--text)">6 levels</strong>, then translate your code into binary, just like a real compiler does. You can also repeat a command using
+      <strong style="color:var(--text)">COMMAND(N)</strong> (like MOVE_RIGHT(3)).
     </p>
   </div>
 
@@ -536,7 +535,6 @@
         <div class="editor-body">
           <div class="line-nums" id="lineNums">1</div>
           <textarea class="code-ta" id="codeTA"
-            placeholder="// One command per line&#10;// Use COMMAND(N) to repeat, e.g. MOVE_RIGHT(3)&#10;&#10;MOVE_RIGHT&#10;MOVE_DOWN"
             spellcheck="false"
             oninput="Game.updateLineNums()"></textarea>
         </div>
@@ -560,8 +558,8 @@
   <div class="bin-topbar">
     <h2>Translate to Binary</h2>
     <p>
-      You finished Level 5. Now rewrite that same program using binary codes instead of commands.
-      Use the key on the right as a reference. Press Run to see if your binary code reaches the goal.
+      You beat Level 5 earlier. Now write that same program again using binary codes instead of words.
+      Check the key on the right. Press Run to see if your binary code works.
     </p>
   </div>
 
@@ -581,7 +579,7 @@
       <div class="bin-refs">
         <!-- Source code reference -->
         <div class="card" style="padding:1rem 1.1rem;">
-          <div class="card-label">Your Level 5 Source Code</div>
+          <div class="card-label">Your Level 5 Code</div>
           <div class="src-display" id="srcDisplay"></div>
         </div>
         <!-- Binary key -->
@@ -621,9 +619,9 @@
       </div>
 
       <div class="explainer">
-        <strong>How it works:</strong> Each 3-bit code you write maps to one command (e.g. 011 = MOVE_RIGHT).
-        The CPU reads binary directly - it has no idea what "MOVE_RIGHT" means as text.
-        If your binary is correct, the player will reach the same goal as before.
+        <strong>How it works:</strong> Each 3-bit code you write matches one command (like 011 = MOVE_RIGHT).
+        The CPU reads binary directly. It has no idea what "MOVE_RIGHT" means as text.
+        If your code is correct, the player will reach the same goal.
       </div>
     </div>
   </div>
@@ -689,7 +687,7 @@
 <div id="p-reflect" class="phase">
   <div class="reflect-title">One Last Question</div>
   <div class="reflect-q">
-    <strong>In your own words, what did you just do in the binary phase, and how does that relate to how a real CPU runs your Python code?</strong>
+    <strong>In your own words, what did you learn in the binary phase? How does it connect to the way a real CPU runs your code?</strong>
     <textarea class="reflect-ta" id="reflectTA"
       placeholder="Type your answer here…"
       spellcheck="false"></textarea>
@@ -706,25 +704,21 @@
 <div id="p-win" class="phase">
   <div class="win-icon">🏁</div>
   <div class="win-title">All Done!</div>
-  <div class="win-sub">All 5 levels cleared and binary translation correct.</div>
+  <div class="win-sub">All 6 levels cleared and binary translation correct.</div>
 
   <div class="stat-row">
     <div class="stat"><div class="stat-n" id="ws-cmds">0</div><div class="stat-l">Total Commands</div></div>
     <div class="stat"><div class="stat-n" id="ws-bits">0</div><div class="stat-l">Bits Generated</div></div>
-    <div class="stat"><div class="stat-n">5</div>              <div class="stat-l">Maps Cleared</div></div>
+    <div class="stat"><div class="stat-n">6</div>              <div class="stat-l">Maps Cleared</div></div>
   </div>
 
   <div class="lesson">
     <h3>From Source Code to Machine Code</h3>
     <p>
-      Every command you typed - <code>MOVE_RIGHT</code>, <code>MOVE_UP</code> - is
-      <strong>source code</strong>: text that people can read and write.
-      Before a CPU can run it, a <strong>compiler</strong> translates each command into a
-      binary code made of 1s and 0s. For example, <code>MOVE_RIGHT</code> becomes
-      <code class="bin">011</code>. The CPU reads those bits and uses them to control its
-      internal circuits. That whole process -
-      <strong>source code to binary to electrical signals</strong> - is how every program
-      on every computer runs.
+      Every command you typed, like <code>MOVE_RIGHT</code>, is <strong>source code</strong>: text humans read and write.
+      Before a CPU can run it, a <strong>compiler</strong> translates it into binary code made of 1s and 0s. 
+      For example, <code>MOVE_RIGHT</code> becomes <code class="bin">011</code>. The CPU reads direct binary to control its circuits. 
+      This process of changing text to binary to electricity is how every computer program runs.
     </p>
   </div>
 
@@ -756,7 +750,7 @@ const VALID = new Set(Object.keys(ISA));
 const MAPS = [
   {
     name: 'Level 1 · First Boot',
-    desc: 'No walls. Get comfortable with the commands.',
+    desc: 'No walls yet. Just try out the commands.',
     grid: [
       [0,0,0,0,0,0],
       [0,0,0,0,0,0],
@@ -771,7 +765,7 @@ const MAPS = [
   },
   {
     name: 'Level 2 · Access Denied',
-    desc: 'Walls block the direct path. Find a way around.',
+    desc: 'Walls block your path. Find a way around.',
     grid: [
       [0,0,0,0,0,0],
       [0,0,0,1,0,0],
@@ -828,8 +822,8 @@ const MAPS = [
     */
   },
   {
-    name: 'Level 5 · Zero-Day  ★',
-    desc: 'The final challenge. This run gets compiled to binary!',
+    name: 'Level 5 · Zero-Day',
+    desc: 'This maze is tough. Plan your route before you run it.',
     grid: [
       [0,0,0,1,1,1],
       [1,1,0,1,1,1],
@@ -846,14 +840,22 @@ const MAPS = [
       MOVE_DOWN, MOVE_LEFT, MOVE_DOWN, MOVE_RIGHT, MOVE_RIGHT,
       MOVE_DOWN, MOVE_RIGHT, MOVE_UP, MOVE_UP, MOVE_RIGHT,
       MOVE_UP, MOVE_RIGHT, MOVE_DOWN, MOVE_DOWN, MOVE_DOWN
-
-      Path: (0,0)→R(0,1)→R(0,2)→D(1,2)→D(2,2)→L(2,1)→D(3,1)→L(3,0)→
-            D(4,0)→R(4,1)→R(4,2)→D(5,2)→R(5,3)→U(4,3)→U(3,3)→R(3,4)→
-            U(2,4)→R(2,5)→D(3,5)→D(4,5)→D(5,5) = 20 commands
-
-      Dead ends: (0,0)→D(1,0)=wall; (1,2)→L(1,1)=wall or R(1,3)=wall;
-      (3,4)→D(4,4)=wall; (2,4)→L(2,3)=wall
     */
+  },
+  {
+    name: 'Level 6 · Binary Mode',
+    desc: 'The editor now only accepts machine code. Refer to your binary key handout.',
+    binaryOnly: true,
+    grid: [
+      [0,1,0,0,0,0],
+      [0,1,0,1,1,0],
+      [0,1,0,1,0,0],
+      [0,1,0,1,0,1],
+      [0,0,0,1,0,1],
+      [1,1,1,1,0,0]
+    ],
+    start: { r:0, c:0 },
+    goal:  { r:5, c:5 }
   }
 ];
 
@@ -905,6 +907,9 @@ const Game = {
     $('levelName').textContent = m.name;
     $('levelDesc').textContent = m.desc;
     $('codeTA').value          = '';
+    $('codeTA').placeholder    = m.binaryOnly
+      ? "// Level 6: Binary Mode\n// Enter one 3-bit code per line."
+      : "// One command per line\n// Use COMMAND(N) to repeat, e.g. MOVE_RIGHT(3)\n\nMOVE_RIGHT\nMOVE_DOWN";
     $('stepInfo').textContent  = '';
     $('curCmd').textContent    = '-';
     $('runBtn').disabled       = false;
@@ -919,7 +924,7 @@ const Game = {
   buildPips() {
     const el = $('pips');
     el.innerHTML = '';
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < MAPS.length; i++) {
       const d = document.createElement('div');
       d.className = 'pip'
         + (i <  state.mapIdx  ? ' done'   : '')
@@ -1017,9 +1022,26 @@ const Game = {
     const lines = $('codeTA').value.split('\n');
     const cmds  = [];
 
+    const m   = MAPS[state.mapIdx];
+
     for (let i = 0; i < lines.length; i++) {
       const raw = lines[i].trim().toUpperCase();
       if (raw === '' || raw.startsWith('//')) continue;
+
+      if (m.binaryOnly) {
+        if (!/^[01]{3}$/.test(raw)) {
+          this.setStatus('err',
+            `Line ${i + 1}: "${raw}" is not a valid 3-bit code. Use only 0 and 1.`);
+          return;
+        }
+        if (!BIN_TO_CMD[raw]) {
+          this.setStatus('err',
+            `Line ${i + 1}: "${raw}" is not a code in the key.`);
+          return;
+        }
+        cmds.push(raw);
+        continue;
+      }
 
       // Handle COMMAND*N shorthand (e.g. MOVE_RIGHT*3)
       const repeatMatch = raw.match(/^([A-Z_]+)\((\d+)\)$/);
@@ -1053,7 +1075,6 @@ const Game = {
       return;
     }
 
-    const m   = MAPS[state.mapIdx];
     state.pos = { ...m.start };
     state.trail = new Set([m.start.r + ',' + m.start.c]);
 
@@ -1078,11 +1099,14 @@ const Game = {
       return;
     }
 
-    const cmd         = cmds[i];
-    const { r, c }    = state.pos;
+    const raw         = cmds[i];
     const m           = MAPS[state.mapIdx];
+    const cmd         = m.binaryOnly ? BIN_TO_CMD[raw] : raw;
+    const { r, c }    = state.pos;
 
-    $('curCmd').textContent   = `Step ${i + 1} / ${cmds.length}:  ${cmd}`;
+    $('curCmd').textContent   = m.binaryOnly
+      ? `Step ${i + 1} / ${cmds.length}:  ${raw}  (${cmd})`
+      : `Step ${i + 1} / ${cmds.length}:  ${cmd}`;
     $('stepInfo').textContent = `${i + 1} / ${cmds.length}`;
 
     let nr = r, nc = c;
@@ -1130,14 +1154,14 @@ const Game = {
       $('curCmd').textContent   = '✓  Goal reached!';
       $('stepInfo').textContent = `${cmds.length} command${cmds.length !== 1 ? 's' : ''} used`;
 
-      if (state.mapIdx < 4) {
+      if (state.mapIdx < MAPS.length - 1) {
         this.setStatus('ok', `Level ${state.mapIdx + 1} complete! Loading next map...`);
         state.timer = setTimeout(() => {
           state.mapIdx++;
           this.loadMap(state.mapIdx);
         }, 1600);
       } else {
-        this.setStatus('ok', 'All 5 levels done! Moving to the binary translation...');
+        this.setStatus('ok', 'All levels done! Moving to the binary translation...');
         state.timer = setTimeout(() => Binary.show(), 1900);
       }
       return;
@@ -1407,64 +1431,56 @@ const Binary = {
 const DEBUG_LEVELS = [
   {
     name: 'Debug 1 · Source Code Bug',
-    desc: 'One command is wrong. Find it and fix it.',
+    desc: 'There is a bug hidden in here. Find it and fix it.',
     hint: '<strong>Bug type: wrong direction.</strong> Read through each command and trace the path on the grid. One command sends the player the wrong way.',
     fileName: 'buggy_program.src',
     grid: [
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0]
+      [0,0,0,1,1,1],
+      [1,1,0,1,1,1],
+      [0,0,0,1,1,1],
+      [0,1,1,1,1,1],
+      [0,0,0,0,0,1],
+      [1,1,1,1,0,0]
     ],
-    start: { r:2, c:0 },
-    goal:  { r:2, c:4 },
-    // Correct path: MOVE_RIGHT ×4  (stays on row 2)
-    // Bug: line 3 is MOVE_DOWN instead of MOVE_RIGHT → player lands at (3,3), not (2,4)
-    buggyCode: 'MOVE_RIGHT\nMOVE_RIGHT\nMOVE_DOWN\nMOVE_RIGHT',
+    start: { r:0, c:0 },
+    goal:  { r:5, c:5 },
+    buggyCode: 'MOVE_RIGHT\nMOVE_RIGHT\nMOVE_DOWN\nMOVE_DOWN\nMOVE_LEFT\nMOVE_UP\nMOVE_DOWN\nMOVE_DOWN\nMOVE_RIGHT\nMOVE_RIGHT\nMOVE_RIGHT\nMOVE_RIGHT\nMOVE_DOWN\nMOVE_RIGHT',
     validationType: 'source'
   },
   {
     name: 'Debug 2 · Binary Bug',
     desc: 'One binary code is wrong. Use the key to find it.',
-    hint: '<strong>Bug type: wrong binary code.</strong> Each 3-bit code maps to a command — check the key. One code sends the player the wrong direction.',
+    hint: '<strong>Bug type: wrong binary code.</strong> Scan through the codes and check your key. One code sends the player the wrong direction.',
     fileName: 'buggy_program.bin',
     grid: [
+      [0,0,0,0,0,1],
+      [1,1,1,1,0,1],
+      [0,0,0,0,0,1],
+      [0,1,1,1,1,1],
       [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0]
+      [1,1,1,1,1,0]
     ],
-    start: { r:1, c:0 },
-    goal:  { r:1, c:4 },
-    // Correct: 011 011 011 011  (MOVE_RIGHT ×4, stays on row 1)
-    // Bug: 2nd code is 000 (MOVE_UP) instead of 011 → player jumps to row 0 and misses goal
-    buggyCode: '011\n000\n011\n011',
+    start: { r:0, c:0 },
+    goal:  { r:5, c:5 },
+    buggyCode: '011\n011\n011\n011\n001\n001\n010\n010\n000\n010\n001\n001\n011\n011\n011\n011\n011\n001',
     validationType: 'binary'
   },
   {
-    name: 'Debug 3 · Mixed Code — Rewrite in Source',
-    desc: 'Binary and named commands are mixed. Rewrite it entirely in named commands and fix the bug.',
-    hint: '<strong>Bug type: mixed code + wrong direction.</strong> Binary codes are not valid here — every line must be a named command. Also, one of the directions is wrong — trace the path to find it.',
+    name: 'Debug 3 · Mixed Code Fix',
+    desc: 'Binary and named commands are mixed here. Rewrite all of it in named commands and fix the bug.',
+    hint: '<strong>Bug type: mixed code + wrong direction.</strong> You can\'t use binary codes here. Change every line to a named command. Also, trace the path to find the wrong direction.',
     fileName: 'messy_program.src',
     grid: [
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0],
-      [0,0,0,0,0,0]
+      [0,1,0,0,0,0],
+      [0,1,0,1,1,0],
+      [0,0,0,1,0,0],
+      [1,1,1,1,0,1],
+      [0,0,0,0,0,1],
+      [0,1,1,1,1,1]
     ],
     start: { r:0, c:0 },
-    goal:  { r:2, c:3 },
-    // Correct: MOVE_RIGHT MOVE_RIGHT MOVE_RIGHT MOVE_DOWN MOVE_DOWN  (5 cmds)
-    // Path: (0,0)→R(0,1)→R(0,2)→R(0,3)→D(1,3)→D(2,3) ✓
-    // Buggy mixed: MOVE_RIGHT, 011 (binary for RIGHT but invalid here), MOVE_RIGHT, MOVE_UP, MOVE_DOWN
-    // Two issues: line 2 is binary (must become MOVE_RIGHT), line 4 is MOVE_UP (should be MOVE_DOWN)
-    buggyCode: 'MOVE_RIGHT\n011\nMOVE_RIGHT\nMOVE_UP\nMOVE_DOWN',
+    goal:  { r:5, c:0 },
+    buggyCode: 'MOVE_DOWN\nMOVE_DOWN\n011\nMOVE_RIGHT\n000\nMOVE_UP\n011\n011\n011\n001\nMOVE_DOWN\n001\n010\nMOVE_DOWN\nMOVE_LEFT\n000\n010\nMOVE_LEFT\nMOVE_DOWN',
     validationType: 'sourceOnly'
   }
 ];
