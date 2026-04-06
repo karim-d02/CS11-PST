@@ -546,6 +546,17 @@
         <span class="step-info" id="stepInfo"></span>
       </div>
 
+      <div class="card hidden" id="gameBinKey" style="padding:.85rem 1.1rem; margin-top:.2rem;">
+        <div class="card-label" style="margin-bottom:.5rem;">Binary Key</div>
+        <table class="ref-tbl" style="font-size:.8rem;">
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_UP</td>   <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">000</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_DOWN</td> <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">001</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_LEFT</td> <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">010</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_RIGHT</td><td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">011</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">WAIT</td>      <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">100</td></tr>
+        </table>
+      </div>
+
     </div>
   </div>
 </div>
@@ -675,6 +686,17 @@
         <button class="btn btn-primary"   id="dbgRunBtn"   onclick="DebugGame.run()">▶ Run</button>
         <button class="btn btn-secondary" id="dbgResetBtn" onclick="DebugGame.reset()">↺ Reset</button>
         <span class="step-info" id="dbgStepInfo"></span>
+      </div>
+
+      <div class="card hidden" id="dbgBinKey" style="padding:.85rem 1.1rem; margin-top:.2rem;">
+        <div class="card-label" style="margin-bottom:.5rem;">Binary Key</div>
+        <table class="ref-tbl" style="font-size:.8rem;">
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_UP</td>   <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">000</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_DOWN</td> <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">001</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_LEFT</td> <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">010</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">MOVE_RIGHT</td><td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">011</td></tr>
+          <tr><td class="r-cmd" style="padding:.25rem 0;">WAIT</td>      <td class="r-arr" style="padding:.25rem .5rem; text-align:center;">→</td><td class="r-bin" style="padding:.25rem 0; text-align:right;">100</td></tr>
+        </table>
       </div>
     </div>
   </div>
@@ -914,6 +936,12 @@ const Game = {
     $('curCmd').textContent    = '-';
     $('runBtn').disabled       = false;
     $('resetBtn').disabled     = false;
+
+    if (m.binaryOnly) {
+      $('gameBinKey').classList.remove('hidden');
+    } else {
+      $('gameBinKey').classList.add('hidden');
+    }
 
     this.buildPips();
     this.renderGrid();
@@ -1482,6 +1510,24 @@ const DEBUG_LEVELS = [
     goal:  { r:5, c:0 },
     buggyCode: 'MOVE_DOWN\nMOVE_DOWN\n011\nMOVE_RIGHT\n000\nMOVE_UP\n011\n011\n011\n001\nMOVE_DOWN\n001\n010\nMOVE_DOWN\nMOVE_LEFT\n000\n010\nMOVE_LEFT\nMOVE_DOWN',
     validationType: 'sourceOnly'
+  },
+  {
+    name: 'Debug 4 · The Hard One',
+    desc: 'This is the hardest debug level by far. Take your time.',
+    hint: '<strong>Bug type: multiple binary codes.</strong> There are 3 bugs hidden in this sequence. You must find and fix all 3 before the program reaches the goal.',
+    fileName: 'hardest_program.bin',
+    grid: [
+      [0,0,0,0,0,0],
+      [0,1,1,1,1,0],
+      [0,1,0,0,1,0],
+      [0,1,0,1,1,0],
+      [0,1,0,0,0,0],
+      [0,1,1,1,1,1]
+    ],
+    start: { r:5, c:0 },
+    goal:  { r:2, c:3 },
+    buggyCode: '000\n000\n000\n000\n010\n011\n011\n011\n011\n011\n001\n011\n001\n001\n010\n001\n010\n000\n000\n011',
+    validationType: 'binary'
   }
 ];
 
@@ -1514,6 +1560,12 @@ const DebugGame = {
     $('dbgRunBtn').disabled       = false;
     $('dbgResetBtn').disabled     = false;
 
+    if (d.validationType !== 'source') {
+      $('dbgBinKey').classList.remove('hidden');
+    } else {
+      $('dbgBinKey').classList.add('hidden');
+    }
+
     this.buildPips();
     this.renderGrid();
     this.setStatus('idle', 'Find the bug and fix it, then press Run.');
@@ -1524,7 +1576,7 @@ const DebugGame = {
   buildPips() {
     const el = $('debugPips');
     el.innerHTML = '';
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < DEBUG_LEVELS.length; i++) {
       const d = document.createElement('div');
       d.className = 'debug-pip'
         + (i <  debugState.idx  ? ' done'   : '')
@@ -1772,7 +1824,7 @@ const DebugGame = {
       $('dbgCurCmd').textContent   = '✓  Bug fixed! Goal reached!';
       $('dbgStepInfo').textContent = `${cmds.length} ${isBinary ? 'codes' : 'commands'} used`;
 
-      if (debugState.idx < 2) {
+      if (debugState.idx < DEBUG_LEVELS.length - 1) {
         this.setStatus('ok', `Debug ${debugState.idx + 1} solved! Loading next debug level...`);
         debugState.timer = setTimeout(() => {
           this.show(debugState.idx + 1);
